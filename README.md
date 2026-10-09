@@ -4,6 +4,12 @@ AniPulse is a personal show tracker. You follow something once. The app keeps th
 
 Fans usually piece that together themselves: a post on X, a line on Crunchyroll, a note on the official site, a thread on Reddit. AniPulse collects those sources, throws out the noise, and answers the question.
 
+## Live app
+
+[AniPulse on Vercel](https://temporary-express-gold-6bnd9jr.vercel.app)
+
+That deployment is the October 2026 sample catalog: the watchlist, feed, calendar, catch-up, and recommendations. It is the same app as the local one.
+
 ## Credits
 
 **Kel** conceived AniPulse. The product idea, the problem (fragmented show news), and the feature set — the watchlist, the release calendar, release-date estimates, sub versus dub tracking, streaming availability, spoiler-safe updates, “what did I miss?”, and watchlist recommendations — are Kel's.

@@ -4,8 +4,11 @@ dist/
 .venv/
 __pycache__/
 .pytest_cache/
+.vercel/
+_uv/
 *.pyc
 .env
 .DS_Store
 *.tsbuildinfo
 backend/test_anipulse.db
+.vercel

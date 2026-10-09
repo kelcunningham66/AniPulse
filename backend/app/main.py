@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 
 from app.database import get_engine, session_factory
 from app.models import Base
@@ -35,34 +33,8 @@ app.add_middleware(
 )
 app.include_router(router, prefix="/api")
 
-
-def _spa_index() -> Path | None:
-    candidates = (
-        Path.cwd() / "public" / "index.html",
-        Path(__file__).resolve().parents[2] / "public" / "index.html",
-    )
-    for path in candidates:
-        if path.is_file():
-            return path
-    return None
-
-
-@app.get("/", include_in_schema=False)
-def root():
-    index = _spa_index()
-    if index is not None:
-        return FileResponse(index)
-    return {"service": "AniPulse AI", "docs": "/docs"}
-
-
-@app.get("/{full_path:path}", include_in_schema=False)
-def spa(full_path: str):
-    """Serve the built dashboard for client-side routes such as /feed."""
-    if full_path == "api" or full_path.startswith("api/"):
-        raise HTTPException(status_code=404, detail="Not found")
-    if "." in Path(full_path).name:
-        raise HTTPException(status_code=404, detail="Not found")
-    index = _spa_index()
-    if index is None:
-        raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(index)
+# Vercel copies this directory to the CDN. check_dir is false so a local API
+# process can start before the dashboard has been built.
+_frontend = getattr(app, "frontend", None)
+if _frontend is not None:
+    _frontend("/", directory="public", fallback="index.html", check_dir=False)
