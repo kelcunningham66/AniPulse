@@ -8,7 +8,7 @@ Fans usually piece that together themselves: a post on X, a line on Crunchyroll,
 
 **Kel** conceived AniPulse. The product idea, the problem (fragmented show news), and the feature set — the watchlist, the release calendar, release-date estimates, sub versus dub tracking, streaming availability, spoiler-safe updates, “what did I miss?”, and watchlist recommendations — are Kel's.
 
-**Grok 4.7** (xAI), working in Cursor, built this application: the React interface, the FastAPI service, the collection pipeline, and the scikit-learn models that decide whether a source is a real update and which season an undated announcement probably belongs to.
+Working in Cursor, Kel and Cursor built this application: the React interface, the FastAPI service, the collection pipeline, and the scikit-learn models that decide whether a source is a real update and which season an undated announcement probably belongs to.
 
 ## What you can do
 
