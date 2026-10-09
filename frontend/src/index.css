@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --color-ink: #110e0c;
+  --color-panel: #1b1714;
+  --color-panel-2: #26201c;
+  --color-cream: #f6f0e6;
+  --color-mist: #b7aa9c;
+  --color-faint: #7d7268;
+  --color-pulse: #ff4d2e;
+  --color-good: #8fd0b0;
+  --color-warn: #e6b15c;
+  --color-info: #9ec0e0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(900px 480px at 8% -10%, rgba(255, 77, 46, 0.18), transparent 55%),
+    radial-gradient(640px 380px at 100% 0%, rgba(158, 192, 224, 0.08), transparent 46%),
+    var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #ff4d2e;
+  color: #110e0c;
+}
+
+:focus-visible {
+  outline: 2px solid #ff4d2e;
+  outline-offset: 2px;
+}
+
+.panel {
+  border: 1px solid rgba(246, 240, 230, 0.08);
+  background: rgba(27, 23, 20, 0.94);
+  border-radius: 22px;
+}
+
+.kicker {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.7);
+    opacity: 0.55;
+  }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+}
