@@ -19,7 +19,14 @@ _Session: sessionmaker[Session] | None = None
 
 
 def database_url() -> str:
-    return os.getenv("DATABASE_URL", DEFAULT_URL)
+    configured = os.getenv("DATABASE_URL")
+    if configured:
+        return configured
+    # Vercel has no local Postgres. The demo catalog is seeded into a file
+    # on the instance, and a cold start loads it again.
+    if os.getenv("VERCEL"):
+        return "sqlite:////tmp/anipulse.db"
+    return DEFAULT_URL
 
 
 def get_engine():
