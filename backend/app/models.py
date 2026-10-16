@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import JSON
 
@@ -24,6 +24,16 @@ class User(Base):
     spoiler_protection: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_lead_minutes: Mapped[int] = mapped_column(Integer, default=30)
+    notify_in_app: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("TRUE"))
+    notify_email: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("TRUE"))
+    notify_push: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("FALSE"))
+    notify_episodes: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("TRUE"))
+    notify_dubs: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("TRUE"))
+    notify_delays: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("TRUE"))
+    notify_renewals: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("TRUE"))
+    notify_streaming: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("TRUE"))
+    email_address: Mapped[str] = mapped_column(String(160), default="", server_default="")
+    push_token: Mapped[str] = mapped_column(String(512), default="", server_default="")
     last_checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
@@ -175,6 +185,34 @@ class UpdateEvent(Base):
     sources: Mapped[list] = mapped_column(JSON)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     external_name: Mapped[str] = mapped_column(String(160), default="")
+
+
+class Alert(Base):
+    __tablename__ = "alerts"
+    __table_args__ = (UniqueConstraint("user_id", "dedupe_key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    dedupe_key: Mapped[str] = mapped_column(String(120))
+    category: Mapped[str] = mapped_column(String(16))
+    title_id: Mapped[int | None] = mapped_column(ForeignKey("titles.id"), nullable=True)
+    headline: Mapped[str] = mapped_column(String(240))
+    body: Mapped[str] = mapped_column(Text, default="")
+    citations: Mapped[list] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    read: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("FALSE"))
+
+
+class Delivery(Base):
+    __tablename__ = "deliveries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    alert_id: Mapped[int] = mapped_column(ForeignKey("alerts.id"))
+    channel: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(16))
+    destination: Mapped[str] = mapped_column(String(200), default="")
+    detail: Mapped[str] = mapped_column(String(400), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class Prediction(Base):

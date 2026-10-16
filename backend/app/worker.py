@@ -25,3 +25,22 @@ def scan_task() -> dict:
         return process_pending(db)
     finally:
         db.close()
+
+
+@celery.task(name="anipulse.alerts")
+def alert_task() -> dict:
+    from app.database import session_factory
+    from app.models import User
+    from app.services.notify import materialize_alerts
+    from app.services.query import app_now
+    from sqlalchemy import select
+
+    db = session_factory()()
+    try:
+        moment = app_now()
+        users = list(db.scalars(select(User)))
+        for user in users:
+            materialize_alerts(db, user, moment)
+        return {"users": len(users)}
+    finally:
+        db.close()

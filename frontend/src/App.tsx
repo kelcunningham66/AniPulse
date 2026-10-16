@@ -1,5 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { Shell } from "./components/Shell"
+import { Alerts } from "./pages/Alerts"
+import { Ask } from "./pages/Ask"
 import { CalendarPage } from "./pages/CalendarPage"
 import { CatchUp } from "./pages/CatchUp"
 import { Dashboard } from "./pages/Dashboard"
@@ -18,6 +20,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/feed" element={<Feed />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/ask" element={<Ask />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/catch-up" element={<CatchUp />} />
             <Route path="/discover" element={<Discover />} />

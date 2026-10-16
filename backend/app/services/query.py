@@ -657,14 +657,22 @@ def search(db: Session, user: User, q: str) -> dict:
 
 
 def notifications(db: Session, user: User, now: datetime | None = None) -> dict:
+    from app.services.notify import alert_rows, channel_note, materialize_alerts, push_configured, smtp_configured
+
     moment = now or app_now()
+    skipped = materialize_alerts(db, user, moment) if user.notify_enabled else 0
+    alerts = alert_rows(db, user)
     explicit, _, _ = scopes(db, user)
+    channels = _channels(user, smtp_configured(), push_configured(), channel_note(user))
     if not user.notify_enabled or not explicit:
         return {
             "enabled": user.notify_enabled,
             "lead_minutes": user.notify_lead_minutes,
             "items": [],
-            "channels": _channels(),
+            "channels": channels,
+            "alerts": alerts,
+            "unread": sum(1 for alert in alerts if not alert["read"]),
+            "duplicates_skipped": skipped,
         }
     titles = {title.id: title for title in db.scalars(select(Title).where(Title.id.in_(explicit)))}
     horizon = moment + timedelta(days=21)
@@ -697,16 +705,23 @@ def notifications(db: Session, user: User, now: datetime | None = None) -> dict:
         "enabled": True,
         "lead_minutes": user.notify_lead_minutes,
         "items": items,
-        "channels": _channels(),
+        "channels": channels,
+        "alerts": alerts,
+        "unread": sum(1 for alert in alerts if not alert["read"]),
+        "duplicates_skipped": skipped,
     }
 
 
-def _channels() -> dict:
+def _channels(user: User, smtp_ready: bool, push_ready: bool, note: str) -> dict:
     return {
-        "in_app": True,
-        "email": False,
-        "push": False,
-        "note": "In-app reminders are scheduled. Email and Firebase push stay off until credentials are added.",
+        "in_app": user.notify_in_app,
+        "email": user.notify_email,
+        "push": user.notify_push,
+        "email_address": user.email_address or "",
+        "push_token": user.push_token or "",
+        "smtp_configured": smtp_ready,
+        "push_configured": push_ready,
+        "note": note,
     }
 
 
@@ -798,6 +813,16 @@ def serialize_user(user: User) -> dict:
         "spoiler_protection": user.spoiler_protection,
         "notify_enabled": user.notify_enabled,
         "notify_lead_minutes": user.notify_lead_minutes,
+        "notify_in_app": user.notify_in_app,
+        "notify_email": user.notify_email,
+        "notify_push": user.notify_push,
+        "notify_episodes": user.notify_episodes,
+        "notify_dubs": user.notify_dubs,
+        "notify_delays": user.notify_delays,
+        "notify_renewals": user.notify_renewals,
+        "notify_streaming": user.notify_streaming,
+        "email_address": user.email_address or "",
+        "push_token": user.push_token or "",
         "last_checked_at": checked.isoformat() if checked else None,
     }
 

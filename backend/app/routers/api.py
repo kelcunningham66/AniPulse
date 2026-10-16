@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Follow, WatchProgress
-from app.schemas import ClassifyIn, FollowIn, MePatch, ProgressIn
+from app.schemas import AskIn, ClassifyIn, FollowIn, MePatch, ProgressIn, ReadIn
+from app.services.ask import ask
 from app.services.classifier import score_text
+from app.services.notify import mark_read
 from app.services.collect import pull_public_sources
 from app.services.extract import KICKERS, extract_facts, lead_type, ordered_facts
 from app.services.pipeline import process_pending
@@ -51,6 +53,8 @@ def patch_me(body: MePatch, db: Session = Depends(get_db)) -> dict:
     data = body.model_dump(exclude_none=True)
     if data.get("audio_language") == "ja":
         data["audio_mode"] = "all"
+    if data.get("email_address") and "@" not in data["email_address"]:
+        raise HTTPException(status_code=400, detail="Enter a full email address")
     for key, value in data.items():
         setattr(user, key, value)
     db.commit()
@@ -143,8 +147,21 @@ def get_search(q: str = "", db: Session = Depends(get_db)) -> dict:
 
 
 @router.get("/notifications")
-def get_notifications(db: Session = Depends(get_db)) -> dict:
-    return notifications(db, get_user(db))
+def get_notifications(now: str | None = None, db: Session = Depends(get_db)) -> dict:
+    moment = datetime.fromisoformat(now) if now else None
+    return notifications(db, get_user(db), moment)
+
+
+@router.post("/notifications/read")
+def read_notifications(body: ReadIn, db: Session = Depends(get_db)) -> dict:
+    changed = mark_read(db, get_user(db), body.id)
+    return {"ok": True, "updated": changed}
+
+
+@router.post("/ask")
+def post_ask(body: AskIn, now: str | None = None, db: Session = Depends(get_db)) -> dict:
+    moment = datetime.fromisoformat(now) if now else None
+    return ask(db, get_user(db), body.question, moment)
 
 
 @router.get("/library")

@@ -14,6 +14,16 @@ class MePatch(BaseModel):
     spoiler_protection: bool | None = None
     notify_enabled: bool | None = None
     notify_lead_minutes: Literal[15, 30, 60, 120] | None = None
+    notify_in_app: bool | None = None
+    notify_email: bool | None = None
+    notify_push: bool | None = None
+    notify_episodes: bool | None = None
+    notify_dubs: bool | None = None
+    notify_delays: bool | None = None
+    notify_renewals: bool | None = None
+    notify_streaming: bool | None = None
+    email_address: str | None = Field(default=None, max_length=160)
+    push_token: str | None = Field(default=None, max_length=512)
 
 
 class ProgressIn(BaseModel):
@@ -27,3 +37,11 @@ class FollowIn(BaseModel):
 
 class ClassifyIn(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
+
+
+class AskIn(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+
+
+class ReadIn(BaseModel):
+    id: int | None = None

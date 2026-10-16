@@ -1,4 +1,4 @@
-import { CalendarDays, Compass, History, LayoutList, Radar, Rss, Settings2 } from "lucide-react"
+import { Bell, CalendarDays, Compass, History, LayoutList, MessageCircle, Radar, Rss, Settings2 } from "lucide-react"
 import { useState, type ReactNode } from "react"
 import { NavLink } from "react-router-dom"
 import { useApp } from "../state"
@@ -9,6 +9,8 @@ import { cn } from "../lib/utils"
 const NAV = [
   { to: "/", label: "Watchlist", icon: LayoutList },
   { to: "/feed", label: "Feed", icon: Rss },
+  { to: "/alerts", label: "Alerts", icon: Bell },
+  { to: "/ask", label: "Ask", icon: MessageCircle },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/catch-up", label: "Catch up", icon: History },
   { to: "/discover", label: "Discover", icon: Compass },
@@ -80,14 +82,14 @@ export function Shell({ children }: { children: ReactNode }) {
         </footer>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-ink/95 px-2 py-2 backdrop-blur md:hidden">
-        {NAV.slice(0, 5).map((item) => (
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-white/10 bg-ink/95 px-2 py-2 backdrop-blur md:hidden">
+        {NAV.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === "/"}
             className={({ isActive }) =>
-              cn("flex flex-1 flex-col items-center gap-1 py-1 text-[10px] text-faint", isActive && "text-cream")
+              cn("flex min-w-16 shrink-0 flex-col items-center gap-1 py-1 text-[10px] text-faint", isActive && "text-cream")
             }
           >
             <item.icon size={16} />

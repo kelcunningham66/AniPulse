@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import get_engine, session_factory
+from app.database import ensure_user_columns, get_engine, session_factory
 from app.models import Base
 from app.routers.api import router
 from app.seed import seed_if_empty
@@ -16,6 +16,7 @@ from app.seed import seed_if_empty
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     Base.metadata.create_all(get_engine())
+    ensure_user_columns()
     db = session_factory()()
     try:
         seed_if_empty(db)

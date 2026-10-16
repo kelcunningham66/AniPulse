@@ -8,7 +8,7 @@ Fans usually piece that together themselves: a post on X, a line on Crunchyroll,
 
 [AniPulse on Vercel](https://temporary-express-gold-6bnd9jr.vercel.app)
 
-That deployment is the October 2026 sample catalog: the watchlist, feed, calendar, catch-up, and recommendations. It is the same app as the local one.
+That deployment is a temporary Vercel copy of the October 2026 sample catalog. Redeploy from this repository to pick up Alerts and Ask.
 
 ## Credits
 
@@ -27,6 +27,8 @@ Working in Cursor, Kel and Cursor built this application: the React interface, t
 - **Catch up.** A short list of what changed since you last checked, or over 7, 30, or 60 days.
 - **Recommendations.** A cosine match on the themes of shows you follow, with the titles that drove the score named in the reason.
 - **Release estimate.** When a studio has only said a year, a random forest trained on a sample premiere history suggests a season. Official dates are never replaced by that guess. The number on screen is the model's probability.
+- **Alerts.** New episodes, dubs, delays, renewals, and newly added streaming each send once. In-app is on by default. Email and push send when SMTP or Firebase credentials are set, and stay in the alerts list until then.
+- **Ask.** Questions about the watchlist are answered from saved updates and dated releases, with the source named. A date that was never announced is left unannounced.
 - **Pulse lab.** Paste a note and see the score, or scan waiting sources. A public pull can read an Anime News Network RSS feed and AniList's airing schedule when those hosts are reachable.
 
 The catalog is **sample data for October 2026**, so the product runs without broadcaster credentials. It is not a live listing. Public pulls are labeled separately and can fail closed if a host is unreachable.
@@ -58,7 +60,7 @@ Classification is a TF–IDF logistic regression fit on a fixed labeled set. Ext
 
 Spoiler protection compares episode numbers (and unmarked plot-leak wording) with your saved progress. It will miss a spoiler that never names an episode or uses those words.
 
-Email and Firebase push are stubbed. The API tells you they stay off until credentials exist. In-app reminders are real and computed from the calendar plus your lead time.
+Email uses `SMTP_HOST`, `SMTP_FROM`, and optional `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_TLS`. Push uses `FCM_SERVER_KEY` plus a device token saved in Alerts. Without those, both channels are held in the alerts list and marked held, not sent. The same story is not sent again. In-app reminders still use the calendar plus your lead time.
 
 Celery is wired (`app/worker.py`) for the same scan the API runs inline. Redis is optional for local use.
 

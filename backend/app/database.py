@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -49,6 +49,33 @@ def session_factory() -> sessionmaker[Session]:
     get_engine()
     assert _Session is not None
     return _Session
+
+
+def ensure_user_columns() -> None:
+    """Add alert columns on databases created before notifications shipped."""
+    engine = get_engine()
+    tables = inspect(engine).get_table_names()
+    if "users" not in tables:
+        return
+    have = {column["name"] for column in inspect(engine).get_columns("users")}
+    flag = "TRUE" if engine.dialect.name.startswith("postgres") else "1"
+    off = "FALSE" if engine.dialect.name.startswith("postgres") else "0"
+    additions = {
+        "notify_in_app": f"BOOLEAN DEFAULT {flag}",
+        "notify_email": f"BOOLEAN DEFAULT {flag}",
+        "notify_push": f"BOOLEAN DEFAULT {off}",
+        "notify_episodes": f"BOOLEAN DEFAULT {flag}",
+        "notify_dubs": f"BOOLEAN DEFAULT {flag}",
+        "notify_delays": f"BOOLEAN DEFAULT {flag}",
+        "notify_renewals": f"BOOLEAN DEFAULT {flag}",
+        "notify_streaming": f"BOOLEAN DEFAULT {flag}",
+        "email_address": "VARCHAR(160) DEFAULT ''",
+        "push_token": "VARCHAR(512) DEFAULT ''",
+    }
+    with engine.begin() as connection:
+        for name, ddl in additions.items():
+            if name not in have:
+                connection.execute(text(f"ALTER TABLE users ADD COLUMN {name} {ddl}"))
 
 
 def get_db():

@@ -6,6 +6,16 @@ export type Me = {
   spoiler_protection: boolean
   notify_enabled: boolean
   notify_lead_minutes: number
+  notify_in_app: boolean
+  notify_email: boolean
+  notify_push: boolean
+  notify_episodes: boolean
+  notify_dubs: boolean
+  notify_delays: boolean
+  notify_renewals: boolean
+  notify_streaming: boolean
+  email_address: string
+  push_token: string
   last_checked_at: string | null
 }
 
@@ -78,11 +88,58 @@ export type NotificationItem = {
   lead_minutes: number
 }
 
+export type AlertDelivery = {
+  channel: "in_app" | "email" | "push"
+  status: "sent" | "recorded" | "failed" | "skipped"
+  destination: string
+  detail: string
+}
+
+export type AlertItem = {
+  id: number
+  category: "episode" | "dub" | "delay" | "renewal" | "streaming"
+  slug: string | null
+  name: string
+  headline: string
+  body: string
+  citations: { publisher: string; headline: string }[]
+  created_at: string
+  read: boolean
+  deliveries: AlertDelivery[]
+}
+
 export type Notifications = {
   enabled: boolean
   lead_minutes: number
   items: NotificationItem[]
-  channels: { in_app: boolean; email: boolean; push: boolean; note: string }
+  channels: {
+    in_app: boolean
+    email: boolean
+    push: boolean
+    email_address: string
+    push_token: string
+    smtp_configured: boolean
+    push_configured: boolean
+    note: string
+  }
+  alerts: AlertItem[]
+  unread: number
+  duplicates_skipped: number
+}
+
+export type AskCitation = {
+  publisher: string
+  headline: string
+  published_at: string | null
+  slug: string | null
+  name: string
+}
+
+export type AskAnswer = {
+  question: string
+  answer: string
+  unannounced: boolean
+  citations: AskCitation[]
 }
 
 export type Track = {
