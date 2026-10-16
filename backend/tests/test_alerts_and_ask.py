@@ -27,6 +27,49 @@ def test_alerts_cover_each_kind_and_do_not_repeat():
         assert second["duplicates_skipped"] == len(first["alerts"])
 
 
+def test_held_email_sends_once_credentials_exist(monkeypatch):
+    with client() as api:
+        first = api.get("/api/notifications", params={"now": NOW}).json()
+        assert all(
+            delivery["status"] == "recorded"
+            for alert in first["alerts"]
+            for delivery in alert["deliveries"]
+            if delivery["channel"] == "email"
+        )
+        calls = {"n": 0}
+
+        def fake_email(user, alert, now):
+            calls["n"] += 1
+            from app.models import Delivery
+
+            return Delivery(
+                alert_id=alert.id,
+                channel="email",
+                status="sent",
+                destination=user.email_address,
+                detail="Sent.",
+                created_at=now,
+            )
+
+        monkeypatch.setenv("SMTP_HOST", "smtp.example.test")
+        monkeypatch.setenv("SMTP_FROM", "pulse@example.test")
+        monkeypatch.setattr("app.services.notify._email", fake_email)
+        api.patch("/api/me", json={"email_address": "kel@example.test"})
+        second = api.get("/api/notifications", params={"now": NOW}).json()
+        emailed = [
+            delivery
+            for alert in second["alerts"]
+            for delivery in alert["deliveries"]
+            if delivery["channel"] == "email"
+        ]
+        assert emailed
+        assert all(delivery["status"] == "sent" for delivery in emailed)
+        assert calls["n"] == len(emailed)
+        calls["n"] = 0
+        api.get("/api/notifications", params={"now": NOW})
+        assert calls["n"] == 0
+
+
 def test_turning_off_dubs_hides_them_and_does_not_create_new_ones():
     with client() as api:
         api.patch("/api/me", json={"notify_dubs": False})

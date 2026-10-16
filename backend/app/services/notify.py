@@ -103,6 +103,7 @@ def materialize_alerts(db: Session, user: User, now: datetime) -> int:
             skipped += 1
             continue
         existing.add(candidate["dedupe_key"])
+    _release_held(db, user, now)
     db.commit()
     return skipped
 
@@ -314,6 +315,38 @@ def _category_headline(category: str, name: str) -> str:
         "streaming": "Now streaming",
     }
     return f"{labels[category]} · {name}"
+
+
+def _release_held(db: Session, user: User, now: datetime) -> None:
+    """Send copies that were held until an address and credentials existed."""
+    held = list(
+        db.scalars(
+            select(Delivery)
+            .join(Alert, Alert.id == Delivery.alert_id)
+            .where(Alert.user_id == user.id, Delivery.status == "recorded")
+        )
+    )
+    if not held:
+        return
+    alerts = {
+        alert.id: alert
+        for alert in db.scalars(select(Alert).where(Alert.id.in_({row.alert_id for row in held})))
+    }
+    for delivery in held:
+        alert = alerts.get(delivery.alert_id)
+        if alert is None or not category_enabled(user, alert.category):
+            continue
+        if delivery.channel == "email" and user.notify_email:
+            replacement = _email(user, alert, now)
+        elif delivery.channel == "push" and user.notify_push:
+            replacement = _push(user, alert, now)
+        else:
+            continue
+        if replacement.status == "recorded":
+            continue
+        delivery.status = replacement.status
+        delivery.destination = replacement.destination
+        delivery.detail = replacement.detail
 
 
 def _deliver(db: Session, user: User, alert: Alert, now: datetime) -> None:
